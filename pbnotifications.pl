@@ -34,17 +34,20 @@ use JSON;
 use URI::Escape;
 
 my $curl = WWW::Curl::Easy->new;
-my ($pb_key);
+my ($pb_key, $pb_device);
 
 sub initialize {
     Irssi::settings_add_str("pbnotifications", "pb_key", "");
     $pb_key = Irssi::settings_get_str("pb_key");
+
+    Irssi::settings_add_str("pbnotifications", "pb_device", "");
+    $pb_device = Irssi::settings_get_str("pb_device");
 }
 
 sub _push {
     my $params = shift;
     my %options = %$params;;
-    my $options_str = "";
+    my $options_str = "device_iden=$pb_device";
 
     foreach my $key (keys %options) {
         my $val = $options{$key};
@@ -58,22 +61,22 @@ sub _push {
     $curl->setopt(CURLOPT_POSTFIELDS, $options_str);
     $curl->setopt(CURLOPT_POSTFIELDSIZE, length($options_str));
 
-    my $response;
+    open my $response;
     $curl->setopt(CURLOPT_WRITEDATA, \$response);
     my $retcode = $curl->perform;
 
-    if ($retcode != 0) {
-        print("Issue pushing bullet");
-        return 0;
-    }
-    return 1;
+    # if ($retcode != 0) {
+    #     print("Issue pushing bullet");
+    #     return 0;
+    # }
+    # return 1;
 }
 
 sub priv_msg {
     my ($server,$msg,$nick,$address,$target) = @_;
     my %options = ("type" => "note", "title" => "PM", "body" => $nick . ": " . $msg);
     if (_push(\%options)) {
-        print("Pushed $nick $msg");
+        # print("Pushed $nick $msg");
     }
 }
 sub hilight {
@@ -81,7 +84,7 @@ sub hilight {
     if ($dest->{level} & MSGLEVEL_HILIGHT) {
         my %options = ("type" => "note", "title" => "Mention", "body" => $stripped);
         if (_push(\%options)) {
-            print("Pushed $stripped");
+            # print("Pushed $stripped");
         }
     }
 }
@@ -90,4 +93,4 @@ initialize();
 Irssi::signal_add("setup changed", "initialize");
 Irssi::signal_add_last("message private", "priv_msg");
 Irssi::signal_add_last("print text", "hilight");
-
+Irssi::command_bind('pb_devices', 'devices');
