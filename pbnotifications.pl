@@ -2,7 +2,7 @@
 $VERSION = "201408a";
 
 # Simple script to push notifications and mentions to PushBullet
-# 
+#
 # Heavily inspired by/based on the work of:
 # Derrick Staples <https://github.com/broiledmeat/pbee>
 # Thorsten Leemhuis <http://www.leemhuis.info/files/fnotify/fnotify>
@@ -58,8 +58,9 @@ sub _push {
     $curl->setopt(CURLOPT_POSTFIELDS, $options_str);
     $curl->setopt(CURLOPT_POSTFIELDSIZE, length($options_str));
 
-    my $response;
-    $curl->setopt(CURLOPT_WRITEDATA, \$response);
+    my $response = '';
+    open(my $f, ">", \$response);
+    $curl->setopt(CURLOPT_WRITEDATA, $f);
     my $retcode = $curl->perform;
 
     if ($retcode != 0) {
@@ -90,4 +91,3 @@ initialize();
 Irssi::signal_add("setup changed", "initialize");
 Irssi::signal_add_last("message private", "priv_msg");
 Irssi::signal_add_last("print text", "hilight");
-
