@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-$VERSION = "201408a";
+$VERSION = "201502a";
 
 # Simple script to push notifications and mentions to PushBullet
 # 
@@ -47,7 +47,7 @@ sub _push {
     my $options_str = "";
 
     foreach my $key (keys %options) {
-        my $val = $options{$key};
+        my $val = uri_escape($options{$key});
         $options_str .= "\&$key=$val";
     }
 
