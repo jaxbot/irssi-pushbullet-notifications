@@ -25,7 +25,6 @@ use vars qw($VERSION %IRSSI);
     changed => "$VERSION"
 );
 
-use Data::Dumper;
 use Irssi;
 use Irssi::Irc;
 use HTTP::Response;
