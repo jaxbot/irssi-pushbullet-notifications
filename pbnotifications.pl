@@ -30,7 +30,7 @@ use Irssi::Irc;
 use HTTP::Response;
 use WWW::Curl::Easy;
 use JSON;
-use URI::Escape;
+use URI::Query;
 
 my $curl = WWW::Curl::Easy->new;
 my ($pb_key);
@@ -42,13 +42,7 @@ sub initialize {
 
 sub _push {
     my $params = shift;
-    my %options = %$params;;
-    my $options_str = "";
-
-    foreach my $key (keys %options) {
-        my $val = uri_escape($options{$key});
-        $options_str .= "\&$key=$val";
-    }
+    my $options_str = URI::Query->new(%$params)->stringify;
 
     $curl->setopt(CURLOPT_HEADER, 1);
     $curl->setopt(CURLOPT_URL, "https:\/\/api.pushbullet.com\/v2\/pushes");
