@@ -33,16 +33,38 @@ use JSON;
 use URI::Query;
 
 my $curl = WWW::Curl::Easy->new;
-my ($pb_key);
+my ($pb_key, $delay);
 
 sub initialize {
     Irssi::settings_add_str("pbnotifications", "pb_key", "");
     $pb_key = Irssi::settings_get_str("pb_key");
+
+    Irssi::settings_add_int("pbnotifications", "pb_delay", 5 * 1000);
+    $delay = Irssi::settings_get_int("pb_delay");
 }
 
-sub _push {
-    my $params = shift;
-    my $options_str = URI::Query->new(%$params)->stringify;
+my ( $tag, @pending );
+
+sub queue_notification {
+    push @pending, @_;
+
+    if ( not defined $tag ) {
+        $tag = Irssi::timeout_add($delay, "send_pending", "")
+    }
+}
+
+sub send_pending {
+    my ( $title, $body ) = @pending > 1
+        ? ( "irssi activity" => join("\n", @pending ) )
+        : ( @pending[0, 0] );
+
+    clear_pending();
+
+    my $options_str = URI::Query->new(
+        type => "note",
+        title => $title,
+        body => $body,
+    )->stringify;
 
     $curl->setopt(CURLOPT_HEADER, 1);
     $curl->setopt(CURLOPT_URL, "https:\/\/api.pushbullet.com\/v2\/pushes");
@@ -65,18 +87,20 @@ sub _push {
 
 sub priv_msg {
     my ($server,$msg,$nick,$address,$target) = @_;
-    my %options = ("type" => "note", "title" => "PM", "body" => $nick . ": " . $msg);
-    if (_push(\%options)) {
-        print("Pushed $nick $msg");
-    }
+    queue_notification( "$nick: $msg" )
 }
 sub hilight {
     my ($dest, $text, $stripped) = @_;
     if ($dest->{level} & MSGLEVEL_HILIGHT) {
-        my %options = ("type" => "note", "title" => "Mention", "body" => $stripped);
-        if (_push(\%options)) {
-            print("Pushed $stripped");
-        }
+        queue_notification( $stripped );
+    }
+}
+
+sub clear_pending {
+    if ( defined $tag ) {
+        Irssi::timeout_remove($tag);
+        undef $tag;
+        @pending = ();
     }
 }
 
@@ -84,3 +108,4 @@ initialize();
 Irssi::signal_add("setup changed", "initialize");
 Irssi::signal_add_last("message private", "priv_msg");
 Irssi::signal_add_last("print text", "hilight");
+Irssi::signal_add_last('gui key pressed', 'clear_pending');
