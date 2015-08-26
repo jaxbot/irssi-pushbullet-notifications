@@ -47,7 +47,7 @@ my %nick_ts;
 
 sub initialize {
     Irssi::settings_add_str("pbnotifications", "pb_key", "");
-    Irssi::settings_add_str("pbnotifications", "pb_cooldown", 0);
+    Irssi::settings_add_int("pbnotifications", "pb_cooldown", 0);
     Irssi::settings_add_bool("pbnotifications", "pb_pernick", 1);
 
     $pb_key = Irssi::settings_get_str("pb_key");
@@ -118,12 +118,16 @@ sub priv_msg {
 sub hilight {
     my ($dest, $text, $stripped) = @_;
     if ($dest->{level} & MSGLEVEL_HILIGHT) {
+        my $nick = "";
+        if($stripped =~ /(?:^<)(.+)(?:>)\s/) {
+            $nick = $1;
+        }
         my %options = ("type" => "note", "title" => "Mention", "body" => $stripped);
-        #if(_cooldown($nick)){
+        if(_cooldown($nick)){
             if (_push(\%options)) {
                 print("Pushed $stripped");
-                    }
-                    #}
+            }
+        }
     }
 }
 
