@@ -10,6 +10,12 @@ $VERSION = "201502a";
 # Use:
 #  /set pb_key apikey
 # Where apikey is found on the Pushbullet user page
+# 
+# Setting a cooldown period (in seconds):
+#  /set pb_cooldown 60
+#
+# Apply cooldown per nick
+#  /set pb_pernick 1
 #
 # All PMs and notifications will now to forwarded to PushBullet automatically
 
@@ -35,10 +41,18 @@ use URI::Escape;
 
 my $curl = WWW::Curl::Easy->new;
 my ($pb_key);
+my $cooldown;
+my $pb_pernick;
+my %nick_ts;
 
 sub initialize {
     Irssi::settings_add_str("pbnotifications", "pb_key", "");
+    Irssi::settings_add_int("pbnotifications", "pb_cooldown", 0);
+    Irssi::settings_add_bool("pbnotifications", "pb_pernick", 1);
+
     $pb_key = Irssi::settings_get_str("pb_key");
+    $cooldown = Irssi::settings_get_int("pb_cooldown");
+    $pb_pernick = Irssi::settings_get_bool("pb_pernick");
 }
 
 sub _push {
@@ -70,19 +84,49 @@ sub _push {
     return 1;
 }
 
+sub _cooldown {
+    my $nick = shift;
+    my $ret = 1;
+
+    if(!$pb_pernick){
+        $nick = "none";
+    }
+    if(exists $nick_ts{$nick}) {
+        if(($nick_ts{$nick} + $cooldown) > time){
+            $ret = 0;
+        }
+        else {
+            $nick_ts{$nick} = time;
+        }
+    }
+    else {
+        $nick_ts{$nick} = time;
+    }
+   
+    return $ret;
+}
+
 sub priv_msg {
     my ($server,$msg,$nick,$address,$target) = @_;
     my %options = ("type" => "note", "title" => "PM", "body" => $nick . ": " . $msg);
-    if (_push(\%options)) {
-        print("Pushed $nick $msg");
+    if(_cooldown($nick)){
+        if (_push(\%options)) {
+            print("Pushed $nick $msg");
+        }
     }
 }
 sub hilight {
     my ($dest, $text, $stripped) = @_;
     if ($dest->{level} & MSGLEVEL_HILIGHT) {
+        my $nick = "";
+        if($stripped =~ /(?:^<)(.+)(?:>)\s/) {
+            $nick = $1;
+        }
         my %options = ("type" => "note", "title" => "Mention", "body" => $stripped);
-        if (_push(\%options)) {
-            print("Pushed $stripped");
+        if(_cooldown($nick)){
+            if (_push(\%options)) {
+                print("Pushed $stripped");
+            }
         }
     }
 }
