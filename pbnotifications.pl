@@ -40,7 +40,7 @@ use JSON;
 use URI::Escape;
 
 my $curl = WWW::Curl::Easy->new;
-my ($pb_key);
+my ($pb_key, $pb_device);
 my $cooldown;
 my $pb_pernick;
 my %nick_ts;
@@ -53,12 +53,15 @@ sub initialize {
     $pb_key = Irssi::settings_get_str("pb_key");
     $cooldown = Irssi::settings_get_int("pb_cooldown");
     $pb_pernick = Irssi::settings_get_bool("pb_pernick");
+
+    Irssi::settings_add_str("pbnotifications", "pb_device", "");
+    $pb_device = Irssi::settings_get_str("pb_device");
 }
 
 sub _push {
     my $params = shift;
     my %options = %$params;;
-    my $options_str = "";
+    my $options_str = "device_iden=$pb_device";
 
     foreach my $key (keys %options) {
         my $val = uri_escape($options{$key});
@@ -77,11 +80,11 @@ sub _push {
     $curl->setopt(CURLOPT_WRITEDATA, $f);
     my $retcode = $curl->perform;
 
-    if ($retcode != 0) {
-        print("Issue pushing bullet");
-        return 0;
-    }
-    return 1;
+    # if ($retcode != 0) {
+    #     print("Issue pushing bullet");
+    #     return 0;
+    # }
+    # return 1;
 }
 
 sub _cooldown {
@@ -135,3 +138,4 @@ initialize();
 Irssi::signal_add("setup changed", "initialize");
 Irssi::signal_add_last("message private", "priv_msg");
 Irssi::signal_add_last("print text", "hilight");
+Irssi::command_bind('pb_devices', 'devices');
