@@ -59,6 +59,7 @@ sub initialize {
 }
 
 sub _push {
+    unless ( Irssi::active_win->{'active_server'}->{usermode_away} == 0 ) {
     my $params = shift;
     my %options = %$params;;
     my $options_str = "device_iden=$pb_device";
@@ -85,6 +86,7 @@ sub _push {
     #     return 0;
     # }
     # return 1;
+    }
 }
 
 sub _cooldown {
