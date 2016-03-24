@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-$VERSION = "201502a";
+$VERSION = "201502b";
 
 # Simple script to push notifications and mentions to PushBullet
 #
