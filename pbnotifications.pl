@@ -43,23 +43,26 @@ my $curl = WWW::Curl::Easy->new;
 my ($pb_key, $pb_device);
 my $cooldown;
 my $pb_pernick;
+my $away_only;
 my %nick_ts;
 
 sub initialize {
     Irssi::settings_add_str("pbnotifications", "pb_key", "");
     Irssi::settings_add_int("pbnotifications", "pb_cooldown", 0);
     Irssi::settings_add_bool("pbnotifications", "pb_pernick", 1);
+    Irssi::settings_add_bool("pbnotifications", "away_only", 1);
 
     $pb_key = Irssi::settings_get_str("pb_key");
     $cooldown = Irssi::settings_get_int("pb_cooldown");
     $pb_pernick = Irssi::settings_get_bool("pb_pernick");
+    $away_only = Irssi::settings_get_bool("away_only");
 
     Irssi::settings_add_str("pbnotifications", "pb_device", "");
     $pb_device = Irssi::settings_get_str("pb_device");
 }
 
 sub _push {
-    unless ( Irssi::active_win->{'active_server'}->{usermode_away} == 0 ) {
+    if ( $away_only = 1 ) { return unless ( Irssi::active_win->{'active_server'}->{usermode_away} == 1 ) }
     my $params = shift;
     my %options = %$params;;
     my $options_str = "device_iden=$pb_device";
@@ -86,7 +89,6 @@ sub _push {
     #     return 0;
     # }
     # return 1;
-    }
 }
 
 sub _cooldown {
