@@ -50,7 +50,7 @@ sub initialize {
     Irssi::settings_add_str("pbnotifications", "pb_key", "");
     Irssi::settings_add_int("pbnotifications", "pb_cooldown", 0);
     Irssi::settings_add_bool("pbnotifications", "pb_pernick", 1);
-    Irssi::settings_add_bool("pbnotifications", "away_only", 1);
+    Irssi::settings_add_bool("pbnotifications", "away_only", 0);
 
     $pb_key = Irssi::settings_get_str("pb_key");
     $cooldown = Irssi::settings_get_int("pb_cooldown");
