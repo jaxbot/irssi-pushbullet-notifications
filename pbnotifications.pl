@@ -14,8 +14,8 @@ $VERSION = "201502a";
 # Setting a cooldown period (in seconds):
 #  /set pb_cooldown 60
 #
-# Apply cooldown per nick
-#  /set pb_pernick 1
+# Apply cooldown per nick ("Value must be either ON, OFF or TOGGLE")
+#  /set pb_pernick ON
 #
 # All PMs and notifications will now to forwarded to PushBullet automatically
 
